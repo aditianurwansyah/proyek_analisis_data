@@ -63,27 +63,30 @@ st.pyplot(fig1)
 st.subheader("2. Pengaruh Kecepatan Angin Terhadap PM10 (Musim Dingin)")
 st.markdown("Menampilkan bagaimana hembusan angin membantu membersihkan polusi PM10 pada musim dingin (Desember - Februari).")
 
-musim_dingin = filtered_df[filtered_df['month'].isin([12, 1, 2])].copy()
-if not musim_dingin.empty:
-    def kategori_angin(x):
-        if x < 1:
-            return "1. Sangat Tenang (<1 m/s)"
-        elif x <= 3:
-            return "2. Sedang (1-3 m/s)"
-        else:
-            return "3. Kencang (>3 m/s)"
+st.subheader("Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
     
-    musim_dingin['Kategori Angin'] = musim_dingin['WSPM'].apply(kategori_angin)
-    wind_pm10 = musim_dingin.groupby('Kategori Angin')['PM10'].mean().reset_index()
-
-    fig2, ax2 = plt.subplots(figsize=(10, 4))
-    sns.barplot(data=wind_pm10, x='Kategori Angin', y='PM10', palette='Blues_d', ax=ax2)
-    ax2.set_xlabel("Kondisi Hembusan Angin", fontsize=11)
-    ax2.set_ylabel("Rata-rata PM10", fontsize=11)
-    ax2.grid(axis='y', linestyle='--', alpha=0.6)
-    st.pyplot(fig2)
-else:
-    st.warning("Data musim dingin tidak tersedia untuk tahun yang dipilih.")
+    # Filter musim dingin (Bulan 12, 1, 2) periode 2013-2016
+    winter_df = df[(df['month'].isin([12, 1, 2])) & (df['year'] >= 2013) & (df['year'] <= 2016)]
+    
+    if not winter_df.empty:
+        # Menghitung korelasi
+        korelasi = winter_df[['WSPM', 'RAIN', 'PM10']].corr()
+        
+        # Visualisasi Heatmap (Paling ideal untuk korelasi)
+        fig2, ax2 = plt.subplots(figsize=(7, 5))
+        sns.heatmap(korelasi, annot=True, cmap='coolwarm', fmt=".2f", 
+                    vmin=-1, vmax=1, center=0, ax=ax2, 
+                    linewidths=0.5, linecolor='white')
+        
+        plt.title('Heatmap Korelasi: WSPM, RAIN, dan PM10 (Musim Dingin)', pad=20)
+        st.pyplot(fig2)
+        
+        # Insight
+        corr_wspm = korelasi.loc['WSPM', 'PM10']
+        st.info(f"**Insight:** Korelasi kecepatan angin (WSPM) terhadap PM10 adalah **{corr_wspm:.2f}**. "
+                "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun (angin membantu menyapu polusi).")
+    else:
+        st.warning("Data musim dingin tidak tersedia.")
 
 # --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Sesuai Pertanyaan 3 Notebook) ---
 st.subheader("3. Perbandingan Rata-rata PM2.5 pada Jam Sibuk vs Non-Sibuk (Tahun 2015)")
