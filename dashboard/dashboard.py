@@ -6,12 +6,12 @@ import streamlit as st
 # Mengatur tema visualisasi
 sns.set_theme(style="whitegrid")
 
-# 1. Menyiapkan Judul Dashboard yang Menarik
+# Menyiapkan Judul Dashboard yang Menarik
 st.title("☁️ Kualitas Udara Aotizhongxin")
 st.markdown("**Menelusuri Jejak Polusi Udara (PM2.5) dan Cara Menghindarinya**")
 st.markdown("Dashboard ini dirancang untuk membantu masyarakat memahami kapan polusi udara berada di titik terburuk dan faktor alam apa yang mempengaruhinya.")
 
-# 2. Memuat Data
+# Memuat Data
 @st.cache_data
 def load_data():
     df = pd.read_csv("dashboard/main_data.csv")
@@ -19,7 +19,7 @@ def load_data():
 
 df = load_data()
 
-# --- 3. FITUR BARU: FILTER INTERAKTIF (SIDEBAR) ---
+# FILTER INTERAKTIF (SIDEBAR) 
 st.sidebar.header("🔍 Filter Data")
 
 # Mengambil daftar tahun unik dari dataset
@@ -37,7 +37,7 @@ if not tahun_pilihan:
 else:
     filtered_df = df[df['year'].isin(tahun_pilihan)].copy()
 
-# --- 4. MENAMPILKAN METRIK UTAMA ---
+# MENAMPILKAN METRIK UTAMA ---
 st.markdown("### 📊 Ringkasan Data Utama")
 col1, col2, col3 = st.columns(3)
 with col1:
