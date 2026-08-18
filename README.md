@@ -7,6 +7,7 @@
 
  ## Install library 
    **pip install --upgrade pip**
+   <br>
    **pip install -r requirements.txt** 
  
  ## Run streamlit app
