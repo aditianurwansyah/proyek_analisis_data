@@ -8,8 +8,8 @@
 ## Setup Environment - Shell/terminal
  - mkdir submission_aditia.nurwansyah
  - cd submission_aditia.nurwansyah
- - pip freeze requirements.txt
  - pip install -r requirements.txt
+ - pip freeze requirements.txt
 
  ## Run streamlit app
  - cd dashboard
