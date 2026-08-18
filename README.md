@@ -2,7 +2,7 @@
 
 ## Setup Proyek
    ```
-   <i>Open aplikasi visual studio code</i> 
+   Open aplikasi visual studio code<
    Pilih menu File > Open Folder lalu pilih folder nya dengan nama submission_aditia.nurwansyah 
    Setelah itu kalau di visual studio code klik fitur terminal > new terminal
    Lalu dilanjutkan setelah buka terminal tersebut ke install library
