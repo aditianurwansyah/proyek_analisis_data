@@ -9,7 +9,7 @@ sns.set_theme(style="whitegrid")
 # --- JUDUL DASHBOARD ---
 st.title("☁️ Kualitas Udara Aotizhongxin")
 st.markdown("**Dashboard Analisis Polusi Udara dan Faktor Pendukungnya**")
-st.markdown("Dashboard ini menampilkan hasil analisis komprehensif yang selaras dengan seluruh pertanyaan bisnis pada notebook.")
+st.markdown("Dashboard ini dilengkapi dengan filter interaktif ganda untuk eksplorasi dan manipulasi data secara langsung.")
 
 # --- MEMUAT DATA ---
 @st.cache_data
@@ -19,8 +19,12 @@ def load_data():
 
 df = load_data()
 
-# --- FILTER INTERAKTIF (SIDEBAR) ---
-st.sidebar.header("🔍 Filter Data Utama")
+# ==========================================
+# --- FITUR INTERAKTIF (SIDEBAR) ---
+# ==========================================
+st.sidebar.header("🔍 Kontrol & Filter Data")
+
+# 1. Fitur Interaktif Pertama: Multiselect Tahun
 tahun_tersedia = sorted(df['year'].unique())
 tahun_pilihan = st.sidebar.multiselect(
     "Pilih Tahun yang Ingin Ditampilkan:",
@@ -28,13 +32,29 @@ tahun_pilihan = st.sidebar.multiselect(
     default=tahun_tersedia
 )
 
+# 2. Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
+rentang_bulan = st.sidebar.slider(
+    "Pilih Rentang Bulan:",
+    min_value=1,
+    max_value=12,
+    value=(1, 12),
+    help="Geser slider untuk memfilter data berdasarkan bulan tertentu."
+)
+
+# --- PENERAPAN FILTER KE DATASET ---
 if not tahun_pilihan:
     filtered_df = df.copy()
 else:
     filtered_df = df[df['year'].isin(tahun_pilihan)].copy()
 
+# Filter berdasarkan slider bulan
+filtered_df = filtered_df[
+    (filtered_df['month'] >= rentang_bulan[0]) & 
+    (filtered_df['month'] <= rentang_bulan[1])
+]
+
 # --- RINGKASAN METRIK ---
-st.markdown("### 📊 Ringkasan Data Utama")
+st.markdown("### 📊 Ringkasan Data Utama (Berdasarkan Filter)")
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Rata-rata PM2.5", value=f"{filtered_df['PM2.5'].mean():.1f} µg/m³")
@@ -47,7 +67,7 @@ st.divider()
 
 # --- VISUALISASI 1: Tren Bulanan (Pertanyaan 1) ---
 st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
-st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya.")
+st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya sesuai rentang bulan yang dipilih.")
 
 monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
 
@@ -62,17 +82,14 @@ st.pyplot(fig1)
 st.divider()
 
 # --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 (Pertanyaan 2) ---
-st.subheader("2. Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
-st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan pada musim dingin.")
+st.subheader("2. Korelasi Kecepatan Angin (WSPM) dan Curah Hujan (RAIN) terhadap PM10 (Musim Dingin)")
+st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan.")
 
-# Filter musim dingin (Bulan 12, 1, 2) periode 2013-2016 berdasarkan data yang difilter
 winter_df = filtered_df[(filtered_df['month'].isin([12, 1, 2])) & (filtered_df['year'] >= 2013) & (filtered_df['year'] <= 2016)]
 
 if not winter_df.empty:
-    # Menghitung korelasi
     korelasi = winter_df[['WSPM', 'RAIN', 'PM10']].corr()
     
-    # Visualisasi Heatmap
     fig2, ax2 = plt.subplots(figsize=(7, 5))
     sns.heatmap(korelasi, annot=True, cmap='coolwarm', fmt=".2f", 
                 vmin=-1, vmax=1, center=0, ax=ax2, 
@@ -81,12 +98,11 @@ if not winter_df.empty:
     ax2.set_title('Heatmap Korelasi: WSPM, RAIN, dan PM10 (Musim Dingin)', pad=20)
     st.pyplot(fig2)
     
-    # Insight otomatis
     corr_wspm = korelasi.loc['WSPM', 'PM10']
     st.info(f"**Insight:** Korelasi kecepatan angin (WSPM) terhadap PM10 adalah **{corr_wspm:.2f}**. "
-            "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun (angin membantu menyapu polusi).")
+            "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun.")
 else:
-    st.warning("Data musim dingin untuk periode 2013–2016 tidak ditemukan pada filter tahun yang dipilih di sidebar.")
+    st.warning("Data musim dingin untuk periode 2013–2016 tidak ditemukan pada filter yang aktif saat ini.")
 
 st.divider()
 
@@ -113,4 +129,4 @@ if not df_2015_vis.empty:
     ax3.grid(axis='y', linestyle='--', alpha=0.6)
     st.pyplot(fig3)
 else:
-    st.warning("Tahun 2015 belum dicentang pada filter sidebar di atas. Pastikan tahun 2015 dipilih agar grafik perbandingan jam sibuk muncul.")
+    st.warning("Data untuk tahun 2015 tidak masuk dalam filter tahun atau rentang bulan yang sedang dipilih.")
