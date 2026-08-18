@@ -9,7 +9,7 @@ sns.set_theme(style="whitegrid")
 # --- JUDUL DASHBOARD ---
 st.title("☁️ Kualitas Udara Aotizhongxin")
 st.markdown("**Dashboard Analisis Polusi Udara dan Faktor Pendukungnya**")
-st.markdown("Dashboard ini dirancang agar selaras dengan seluruh pertanyaan analisis di notebook.")
+st.markdown("Dashboard ini menampilkan hasil analisis komprehensif yang selaras dengan seluruh pertanyaan bisnis pada notebook.")
 
 # --- MEMUAT DATA ---
 @st.cache_data
@@ -45,7 +45,7 @@ with col3:
 
 st.divider()
 
-# --- VISUALISASI 1: Tren Bulanan (Sesuai Pertanyaan 1 Notebook) ---
+# --- VISUALISASI 1: Tren Bulanan (Pertanyaan 1) ---
 st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
 st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya.")
 
@@ -59,40 +59,41 @@ ax1.set_xticks(range(1, 13))
 ax1.grid(True, linestyle='--', alpha=0.6)
 st.pyplot(fig1)
 
-# --- VISUALISASI 2: Pengaruh Kecepatan Angin (Sesuai Pertanyaan 2 Notebook - Ramah Non-Teknis) ---
-st.subheader("2. Pengaruh Kecepatan Angin Terhadap PM10 (Musim Dingin)")
-st.markdown("Menampilkan bagaimana hembusan angin membantu membersihkan polusi PM10 pada musim dingin (Desember - Februari).")
+st.divider()
 
-st.subheader("Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
-    
-    # Filter musim dingin (Bulan 12, 1, 2) periode 2013-2016
-    winter_df = df[(df['month'].isin([12, 1, 2])) & (df['year'] >= 2013) & (df['year'] <= 2016)]
-    
-    if not winter_df.empty:
-        # Menghitung korelasi
-        korelasi = winter_df[['WSPM', 'RAIN', 'PM10']].corr()
-        
-        # Visualisasi Heatmap (Paling ideal untuk korelasi)
-        fig2, ax2 = plt.subplots(figsize=(7, 5))
-        sns.heatmap(korelasi, annot=True, cmap='coolwarm', fmt=".2f", 
-                    vmin=-1, vmax=1, center=0, ax=ax2, 
-                    linewidths=0.5, linecolor='white')
-        
-        plt.title('Heatmap Korelasi: WSPM, RAIN, dan PM10 (Musim Dingin)', pad=20)
-        st.pyplot(fig2)
-        
-        # Insight
-        corr_wspm = korelasi.loc['WSPM', 'PM10']
-        st.info(f"**Insight:** Korelasi kecepatan angin (WSPM) terhadap PM10 adalah **{corr_wspm:.2f}**. "
-                "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun (angin membantu menyapu polusi).")
-    else:
-        st.warning("Data musim dingin tidak tersedia.")
+# --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 (Pertanyaan 2) ---
+st.subheader("2. Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
+st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan pada musim dingin.")
 
-# --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Sesuai Pertanyaan 3 Notebook) ---
+# Filter musim dingin (Bulan 12, 1, 2) periode 2013-2016 berdasarkan data yang difilter
+winter_df = filtered_df[(filtered_df['month'].isin([12, 1, 2])) & (filtered_df['year'] >= 2013) & (filtered_df['year'] <= 2016)]
+
+if not winter_df.empty:
+    # Menghitung korelasi
+    korelasi = winter_df[['WSPM', 'RAIN', 'PM10']].corr()
+    
+    # Visualisasi Heatmap
+    fig2, ax2 = plt.subplots(figsize=(7, 5))
+    sns.heatmap(korelasi, annot=True, cmap='coolwarm', fmt=".2f", 
+                vmin=-1, vmax=1, center=0, ax=ax2, 
+                linewidths=0.5, linecolor='white')
+    
+    ax2.set_title('Heatmap Korelasi: WSPM, RAIN, dan PM10 (Musim Dingin)', pad=20)
+    st.pyplot(fig2)
+    
+    # Insight otomatis
+    corr_wspm = korelasi.loc['WSPM', 'PM10']
+    st.info(f"**Insight:** Korelasi kecepatan angin (WSPM) terhadap PM10 adalah **{corr_wspm:.2f}**. "
+            "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun (angin membantu menyapu polusi).")
+else:
+    st.warning("Data musim dingin untuk periode 2013–2016 tidak ditemukan pada filter tahun yang dipilih di sidebar.")
+
+st.divider()
+
+# --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Pertanyaan 3) ---
 st.subheader("3. Perbandingan Rata-rata PM2.5 pada Jam Sibuk vs Non-Sibuk (Tahun 2015)")
-st.markdown("Diagram batang ini membandingkan tingkat polusi antara jam sibuk lalu lintas (07:00-09:00 & 17:00-19:00) dengan jam non-sibuk khusus pada tahun 2015.")
+st.markdown("Diagram batang ini membandingkan tingkat polusi antara jam sibuk lalu lintas dengan jam non-sibuk khusus pada tahun 2015.")
 
-# Memfilter data khusus tahun 2015 untuk visualisasi 3
 df_2015_vis = filtered_df[filtered_df['year'] == 2015].copy()
 
 if not df_2015_vis.empty:
@@ -112,4 +113,4 @@ if not df_2015_vis.empty:
     ax3.grid(axis='y', linestyle='--', alpha=0.6)
     st.pyplot(fig3)
 else:
-    st.warning("Tahun 2015 belum dicentang pada filter sidebar di atas. Pastikan tahun 2015 dipilih agar grafik jam sibuk muncul.")
+    st.warning("Tahun 2015 belum dicentang pada filter sidebar di atas. Pastikan tahun 2015 dipilih agar grafik perbandingan jam sibuk muncul.")
