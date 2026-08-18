@@ -14,7 +14,7 @@ st.markdown("Dashboard ini dirancang untuk membantu masyarakat memahami kapan po
 # 2. Memuat Data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("main_data.csv")
+    df = pd.read_csv("dashboard/main_data.csv")
     return df
 
 df = load_data()
