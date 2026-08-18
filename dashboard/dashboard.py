@@ -14,7 +14,7 @@ st.markdown("Dashboard ini dilengkapi dengan filter interaktif ganda dan insight
 # --- MEMUAT DATA ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv("dashboard/main_data.csv")
+    df = pd.read_csv("main_data.csv")
     return df
 
 df = load_data()
@@ -24,7 +24,7 @@ df = load_data()
 # ==========================================
 st.sidebar.header("🔍 Kontrol & Filter Data")
 
-# 1. Fitur Interaktif Pertama: Multiselect Tahun
+# Fitur Interaktif Pertama: Multiselect Tahun
 tahun_tersedia = sorted(df['year'].unique())
 tahun_pilihan = st.sidebar.multiselect(
     "Pilih Tahun yang Ingin Ditampilkan:",
@@ -32,7 +32,7 @@ tahun_pilihan = st.sidebar.multiselect(
     default=tahun_tersedia
 )
 
-# 2. Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
+# Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
 rentang_bulan = st.sidebar.slider(
     "Pilih Rentang Bulan:",
     min_value=1,
@@ -66,9 +66,9 @@ with col3:
 st.divider()
 
 # ==========================================
-# --- VISUALISASI 1: Tren Bulanan (Pertanyaan 1) ---
+# --- VISUALISASI 1: Tren Bulanan  ---
 # ==========================================
-st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
+st.subheader("1. Bagaimana tren rata-rata tingkat konsentrasi PM2.5 bulanan di stasiun Aotizhongxin sepanjang tahun 2014 hingga 2016, dan pada bulan apa polusi mencapai titik tertinggi?")
 st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya sesuai rentang bulan yang dipilih.")
 
 monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
@@ -96,9 +96,9 @@ else:
 st.divider()
 
 # ==========================================
-# --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 (Pertanyaan 2) ---
+# --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 ---
 # ==========================================
-st.subheader("2. Korelasi Kecepatan Angin (WSPM) dan Curah Hujan (RAIN) terhadap PM10 (Musim Dingin)")
+st.subheader("2. Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
 st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan.")
 
 winter_df = filtered_df[(filtered_df['month'].isin([12, 1, 2])) & (filtered_df['year'] >= 2013) & (filtered_df['year'] <= 2016)]
@@ -123,9 +123,9 @@ else:
 st.divider()
 
 # ==========================================
-# --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Pertanyaan 3) ---
+# --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 ---
 # ==========================================
-st.subheader("3. Perbandingan Rata-rata PM2.5 pada Jam Sibuk vs Non-Sibuk (Tahun 2015)")
+st.subheader("3. Bagaimana perbedaan rata-rata konsentrasi PM2.5 pada jam sibuk lalu lintas (07:00–09:00 dan 17:00–19:00) dibandingkan dengan jam non-sibuk di stasiun Aotizhongxin sepanjang tahun 2015?")
 st.markdown("Diagram batang ini membandingkan tingkat polusi antara jam sibuk lalu lintas dengan jam non-sibuk khusus pada tahun 2015.")
 
 df_2015_vis = filtered_df[filtered_df['year'] == 2015].copy()
