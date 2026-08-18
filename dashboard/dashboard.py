@@ -54,8 +54,15 @@ st.subheader("1. Di bulan apa udara paling kotor?")
 st.markdown("Polusi memburuk secara signifikan pada **musim dingin** (November - Februari).")
 
 monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
-nama_bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
-monthly_df['month_name'] = nama_bulan
+
+# Membuat kamus (dictionary) pemetaan angka bulan ke nama bulan
+kamus_bulan = {
+    1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun',
+    7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'
+}
+
+# Menggunakan fungsi .map() agar otomatis menyesuaikan data yang ada
+monthly_df['month_name'] = monthly_df['month'].map(kamus_bulan)
 
 fig1, ax1 = plt.subplots(figsize=(10, 5))
 ax1.plot(monthly_df['month_name'], monthly_df['PM2.5'], color='crimson', marker='o', linewidth=3)
