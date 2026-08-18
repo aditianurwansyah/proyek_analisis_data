@@ -9,7 +9,7 @@ sns.set_theme(style="whitegrid")
 # --- JUDUL DASHBOARD ---
 st.title("☁️ Kualitas Udara Aotizhongxin")
 st.markdown("**Dashboard Analisis Polusi Udara dan Faktor Pendukungnya**")
-st.markdown("Dashboard ini dilengkapi dengan filter interaktif ganda untuk eksplorasi dan manipulasi data secara langsung.")
+st.markdown("Dashboard ini dilengkapi dengan filter interaktif ganda dan insight otomatis untuk setiap pertanyaan analisis.")
 
 # --- MEMUAT DATA ---
 @st.cache_data
@@ -24,7 +24,7 @@ df = load_data()
 # ==========================================
 st.sidebar.header("🔍 Kontrol & Filter Data")
 
-# Fitur Interaktif Pertama: Multiselect Tahun
+# 1. Fitur Interaktif Pertama: Multiselect Tahun
 tahun_tersedia = sorted(df['year'].unique())
 tahun_pilihan = st.sidebar.multiselect(
     "Pilih Tahun yang Ingin Ditampilkan:",
@@ -32,7 +32,7 @@ tahun_pilihan = st.sidebar.multiselect(
     default=tahun_tersedia
 )
 
-# Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
+# 2. Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
 rentang_bulan = st.sidebar.slider(
     "Pilih Rentang Bulan:",
     min_value=1,
@@ -65,21 +65,25 @@ with col3:
 
 st.divider()
 
+# ==========================================
 # --- VISUALISASI 1: Tren Bulanan (Pertanyaan 1) ---
-st.subheader("1. Bagaimana tren rata-rata tingkat konsentrasi PM2.5 bulanan di stasiun Aotizhongxin sepanjang tahun 2014 hingga 2016, dan pada bulan apa polusi mencapai titik tertinggi?")
+# ==========================================
+st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
 st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya sesuai rentang bulan yang dipilih.")
 
 monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
 
-fig1, ax1 = plt.subplots(figsize=(10, 4))
-sns.lineplot(data=monthly_df, x='month', y='PM2.5', marker='o', color='red', linewidth=2, ax=ax1)
-ax1.set_xlabel("Bulan", fontsize=11)
-ax1.set_ylabel("Rata-rata PM2.5 (µg/m³)", fontsize=11)
-ax1.set_xticks(range(1, 13))
-ax1.grid(True, linestyle='--', alpha=0.6)
-st.pyplot(fig1)
+if not monthly_df.empty:
+    fig1, ax1 = plt.subplots(figsize=(10, 4))
+    sns.lineplot(data=monthly_df, x='month', y='PM2.5', marker='o', color='red', linewidth=2, ax=ax1)
+    ax1.set_xlabel("Bulan", fontsize=11)
+    ax1.set_ylabel("Rata-rata PM2.5 (µg/m³)", fontsize=11)
+    ax1.set_xticks(range(1, 13))
+    ax1.grid(True, linestyle='--', alpha=0.6)
+    st.pyplot(fig1)
 
-max_row = monthly_df.loc[monthly_df['PM2.5'].idxmax()]
+    # Insight Otomatis Pertanyaan 1
+    max_row = monthly_df.loc[monthly_df['PM2.5'].idxmax()]
     kamus_nama_bulan = {
         1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April', 5: 'Mei', 6: 'Juni',
         7: 'Juli', 8: 'Agustus', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
@@ -90,7 +94,10 @@ else:
     st.warning("Tidak ada data yang tersedia untuk rentang bulan/tahun yang dipilih.")
 
 st.divider()
+
+# ==========================================
 # --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 (Pertanyaan 2) ---
+# ==========================================
 st.subheader("2. Korelasi Kecepatan Angin (WSPM) dan Curah Hujan (RAIN) terhadap PM10 (Musim Dingin)")
 st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan.")
 
@@ -115,7 +122,9 @@ else:
 
 st.divider()
 
+# ==========================================
 # --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Pertanyaan 3) ---
+# ==========================================
 st.subheader("3. Perbandingan Rata-rata PM2.5 pada Jam Sibuk vs Non-Sibuk (Tahun 2015)")
 st.markdown("Diagram batang ini membandingkan tingkat polusi antara jam sibuk lalu lintas dengan jam non-sibuk khusus pada tahun 2015.")
 
@@ -138,6 +147,7 @@ if not df_2015_vis.empty:
     ax3.grid(axis='y', linestyle='--', alpha=0.6)
     st.pyplot(fig3)
 
+    # Insight Otomatis Pertanyaan 3
     val_sibuk = df_2015_vis[df_2015_vis['kategori_waktu'].str.contains('Jam Sibuk')]['PM2.5'].mean()
     val_nonsibuk = df_2015_vis[df_2015_vis['kategori_waktu'] == 'Bukan Jam Sibuk']['PM2.5'].mean()
     st.info(f"**Insight:** Pada tahun 2015, rata-rata konsentrasi PM2.5 saat **Jam Sibuk** tercatat sebesar **{val_sibuk:.1f} µg/m³**, sedangkan pada waktu **Non-Sibuk** adalah **{val_nonsibuk:.1f} µg/m³**.")
