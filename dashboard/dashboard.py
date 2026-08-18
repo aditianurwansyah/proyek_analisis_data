@@ -1,160 +1,112 @@
-import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import streamlit as st
 
-# ==============================
-# CONFIG & LOAD DATA
-# ==============================
-st.set_page_config(page_title="Air Quality Dashboard", layout="wide")
+# Mengatur tema visualisasi
+sns.set_theme(style="whitegrid")
 
+# --- JUDUL DASHBOARD ---
+st.title("☁️ Kualitas Udara Aotizhongxin")
+st.markdown("**Dashboard Analisis Polusi Udara dan Faktor Pendukungnya**")
+st.markdown("Dashboard ini dirancang agar selaras dengan seluruh pertanyaan analisis di notebook.")
+
+# --- MEMUAT DATA ---
 @st.cache_data
 def load_data():
-    # Pastikan file CSV tersedia di direktori yang sama
-    df = pd.read_csv("dashboard/main_data.csv")
-    df['datetime'] = pd.to_datetime(df['datetime'])
+    df = pd.read_csv("main_data.csv")
     return df
 
 df = load_data()
 
-# ==============================
-# HEADER DASHBOARD
-# ==============================
-st.title("📊 Air Quality Dashboard - Stasiun Aotizhongxin")
-st.markdown("Visualisasi ini menjawab 3 pertanyaan bisnis utama terkait tren dan faktor polusi udara.")
+# --- FILTER INTERAKTIF (SIDEBAR) ---
+st.sidebar.header("🔍 Filter Data Utama")
+tahun_tersedia = sorted(df['year'].unique())
+tahun_pilihan = st.sidebar.multiselect(
+    "Pilih Tahun yang Ingin Ditampilkan:",
+    options=tahun_tersedia,
+    default=tahun_tersedia
+)
+
+if not tahun_pilihan:
+    filtered_df = df.copy()
+else:
+    filtered_df = df[df['year'].isin(tahun_pilihan)].copy()
+
+# --- RINGKASAN METRIK ---
+st.markdown("### 📊 Ringkasan Data Utama")
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label="Rata-rata PM2.5", value=f"{filtered_df['PM2.5'].mean():.1f} µg/m³")
+with col2:
+    st.metric(label="Rata-rata PM10", value=f"{filtered_df['PM10'].mean():.1f} µg/m³")
+with col3:
+    st.metric(label="Suhu Rata-rata", value=f"{filtered_df['TEMP'].mean():.1f} °C")
+
 st.divider()
 
-# ==============================
-# TABS UNTUK PERTANYAAN BISNIS
-# ==============================
-tab1, tab2, tab3 = st.tabs([
-    "📈 Q1: Tren Bulanan (2014-2016)", 
-    "🌡️ Q2: Korelasi Musim Dingin", 
-    "🚗 Q3: Polusi Jam Sibuk (2015)"
-])
+# --- VISUALISASI 1: Tren Bulanan (Sesuai Pertanyaan 1 Notebook) ---
+st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
+st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya.")
 
-# ---------------------------------------------------
-# PERTANYAAN 1: Tren Rata-rata PM2.5 Bulanan (2014-2016)
-# ---------------------------------------------------
-with tab1:
-    st.subheader("Bagaimana tren rata-rata tingkat konsentrasi PM2.5 bulanan di stasiun Aotizhongxin sepanjang tahun 2014 hingga 2016, dan pada bulan apa polusi mencapai titik tertinggi?")
-    
-    # Filtering data 2014-2016
-    q1_df = df[(df['year'] >= 2014) & (df['year'] <= 2016)]
-    
-    if not q1_df.empty:
-        # Grouping berdasarkan bulan (1-12)
-        monthly_pm25 = q1_df.groupby('month')['PM2.5'].mean().reset_index()
-        
-        # Mapping nama bulan untuk sumbu X
-        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
-        monthly_pm25['month_name'] = month_names
-        
-        rata_rata_tahunan = monthly_pm25['PM2.5'].mean()
+monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
 
-        # Visualisasi mengikuti gaya Screenshot 1
-        fig1, ax1 = plt.subplots(figsize=(10, 5))
-        
-        # Garis utama dan marker
-        ax1.plot(monthly_pm25['month_name'], monthly_pm25['PM2.5'], 
-                 marker='o', color='#DC143C', linewidth=2.5) # Warna Crimson/Merah
-        
-        # Area fill di bawah garis
-        ax1.fill_between(monthly_pm25['month_name'], monthly_pm25['PM2.5'], 
-                         color='#DC143C', alpha=0.2)
-        
-        # Garis putus-putus untuk rata-rata
-        ax1.axhline(rata_rata_tahunan, color='black', linestyle='--', 
-                    linewidth=2, label=f'Rata-rata ({rata_rata_tahunan:.1f})')
-        
-        # Styling Grid & Label
-        ax1.grid(axis='y', linestyle='-', alpha=0.5, color='#D3D3D3')
-        ax1.grid(axis='x', alpha=0) # Hilangkan grid vertikal agar mirip gambar
-        ax1.set_ylabel('Rata-rata PM2.5 (µg/m³)')
-        ax1.set_xlabel('Bulan')
-        ax1.legend(loc='upper center')
-        
-        st.pyplot(fig1)
-        
-        # Insight
-        highest_month = monthly_pm25.loc[monthly_pm25['PM2.5'].idxmax()]
-        st.info(f"**Insight:** Polusi mencapai titik tertinggi pada bulan **{highest_month['month_name']}** "
-                f"dengan rata-rata **{highest_month['PM2.5']:.1f} µg/m³**.")
-    else:
-        st.warning("Data tidak tersedia.")
+fig1, ax1 = plt.subplots(figsize=(10, 4))
+sns.lineplot(data=monthly_df, x='month', y='PM2.5', marker='o', color='red', linewidth=2, ax=ax1)
+ax1.set_xlabel("Bulan", fontsize=11)
+ax1.set_ylabel("Rata-rata PM2.5 (µg/m³)", fontsize=11)
+ax1.set_xticks(range(1, 13))
+ax1.grid(True, linestyle='--', alpha=0.6)
+st.pyplot(fig1)
 
-# ---------------------------------------------------
-# PERTANYAAN 2: Korelasi WSPM, RAIN, PM10 (Musim Dingin)
-# ---------------------------------------------------
-with tab2:
-    st.subheader("Bagaimana korelasi antara kecepatan angin (WSPM) dan curah hujan (RAIN) terhadap tingkat konsentrasi PM10 di stasiun Aotizhongxin selama musim dingin (Desember–Februari) pada periode 2013–2016?")
-    
-    # Filter musim dingin (Bulan 12, 1, 2) periode 2013-2016
-    winter_df = df[(df['month'].isin([12, 1, 2])) & (df['year'] >= 2013) & (df['year'] <= 2016)]
-    
-    if not winter_df.empty:
-        # Menghitung korelasi
-        korelasi = winter_df[['WSPM', 'RAIN', 'PM10']].corr()
-        
-        # Visualisasi Heatmap (Paling ideal untuk korelasi)
-        fig2, ax2 = plt.subplots(figsize=(7, 5))
-        sns.heatmap(korelasi, annot=True, cmap='coolwarm', fmt=".2f", 
-                    vmin=-1, vmax=1, center=0, ax=ax2, 
-                    linewidths=0.5, linecolor='white')
-        
-        plt.title('Heatmap Korelasi: WSPM, RAIN, dan PM10 (Musim Dingin)', pad=20)
-        st.pyplot(fig2)
-        
-        # Insight
-        corr_wspm = korelasi.loc['WSPM', 'PM10']
-        st.info(f"**Insight:** Korelasi kecepatan angin (WSPM) terhadap PM10 adalah **{corr_wspm:.2f}**. "
-                "Nilai negatif menunjukkan bahwa semakin kencang angin, konsentrasi PM10 cenderung menurun (angin membantu menyapu polusi).")
-    else:
-        st.warning("Data musim dingin tidak tersedia.")
+# --- VISUALISASI 2: Pengaruh Kecepatan Angin (Sesuai Pertanyaan 2 Notebook - Ramah Non-Teknis) ---
+st.subheader("2. Pengaruh Kecepatan Angin Terhadap PM10 (Musim Dingin)")
+st.markdown("Menampilkan bagaimana hembusan angin membantu membersihkan polusi PM10 pada musim dingin (Desember - Februari).")
 
-# ---------------------------------------------------
-# PERTANYAAN 3: PM2.5 Jam Sibuk vs Non-Sibuk (2015)
-# ---------------------------------------------------
-with tab3:
-    st.subheader("Bagaimana perbedaan rata-rata konsentrasi PM2.5 pada jam sibuk lalu lintas (07:00–09:00 dan 17:00–19:00) dibandingkan dengan jam non-sibuk di stasiun Aotizhongxin sepanjang tahun 2015?")
+musim_dingin = filtered_df[filtered_df['month'].isin([12, 1, 2])].copy()
+if not musim_dingin.empty:
+    def kategori_angin(x):
+        if x < 1:
+            return "1. Sangat Tenang (<1 m/s)"
+        elif x <= 3:
+            return "2. Sedang (1-3 m/s)"
+        else:
+            return "3. Kencang (>3 m/s)"
     
-    # Filter data tahun 2015
-    q3_df = df[df['year'] == 2015]
-    
-    if not q3_df.empty:
-        # Grouping berdasarkan jam (0-23)
-        hourly_avg = q3_df.groupby('hour')['PM2.5'].mean().reset_index()
-        
-        # Visualisasi mengikuti gaya Screenshot 2
-        fig3, ax3 = plt.subplots(figsize=(10, 5))
-        
-        # Garis utama (Merah Gelap / Maroon)
-        ax3.plot(hourly_avg['hour'], hourly_avg['PM2.5'], 
-                 marker='o', color='#800000', linewidth=2.5)
-        
-        # Highlight Area untuk Jam Sibuk Lalu Lintas (07:00-09:00 dan 17:00-19:00)
-        ax3.axvspan(7, 9, color='#FFC0CB', alpha=0.4, label='Jam Sibuk (Pagi: 07-09)')
-        ax3.axvspan(17, 19, color='#FFC0CB', alpha=0.4, label='Jam Sibuk (Sore: 17-19)')
-        
-        # Styling Axis & Grid
-        ax3.set_xticks(range(0, 24))
-        ax3.set_xlabel('Jam (00:00 - 23:00)')
-        ax3.set_ylabel('Rata-rata PM2.5 (µg/m³)')
-        
-        ax3.grid(axis='y', linestyle='-', alpha=0.5, color='#D3D3D3')
-        ax3.grid(axis='x', alpha=0)
-        ax3.legend(loc='lower center')
-        
-        st.pyplot(fig3)
-        
-        # Insight Perhitungan
-        jam_sibuk_df = q3_df[q3_df['hour'].isin([7,8,9,17,18,19])]
-        jam_nonsibuk_df = q3_df[~q3_df['hour'].isin([7,8,9,17,18,19])]
-        
-        avg_sibuk = jam_sibuk_df['PM2.5'].mean()
-        avg_nonsibuk = jam_nonsibuk_df['PM2.5'].mean()
-        
-        st.info(f"**Insight:** Rata-rata PM2.5 pada Jam Sibuk adalah **{avg_sibuk:.1f} µg/m³**, "
-                f"sedangkan pada Jam Non-Sibuk adalah **{avg_nonsibuk:.1f} µg/m³**.")
-    else:
-        st.warning("Data tahun 2015 tidak tersedia.")
+    musim_dingin['Kategori Angin'] = musim_dingin['WSPM'].apply(kategori_angin)
+    wind_pm10 = musim_dingin.groupby('Kategori Angin')['PM10'].mean().reset_index()
+
+    fig2, ax2 = plt.subplots(figsize=(10, 4))
+    sns.barplot(data=wind_pm10, x='Kategori Angin', y='PM10', palette='Blues_d', ax=ax2)
+    ax2.set_xlabel("Kondisi Hembusan Angin", fontsize=11)
+    ax2.set_ylabel("Rata-rata PM10", fontsize=11)
+    ax2.grid(axis='y', linestyle='--', alpha=0.6)
+    st.pyplot(fig2)
+else:
+    st.warning("Data musim dingin tidak tersedia untuk tahun yang dipilih.")
+
+# --- VISUALISASI 3: Jam Sibuk vs Non-Sibuk 2015 (Sesuai Pertanyaan 3 Notebook) ---
+st.subheader("3. Perbandingan Rata-rata PM2.5 pada Jam Sibuk vs Non-Sibuk (Tahun 2015)")
+st.markdown("Diagram batang ini membandingkan tingkat polusi antara jam sibuk lalu lintas (07:00-09:00 & 17:00-19:00) dengan jam non-sibuk khusus pada tahun 2015.")
+
+# Memfilter data khusus tahun 2015 untuk visualisasi 3
+df_2015_vis = filtered_df[filtered_df['year'] == 2015].copy()
+
+if not df_2015_vis.empty:
+    def kategori_jam(hour):
+        if (7 <= hour <= 9) or (17 <= hour <= 19):
+            return 'Jam Sibuk (07:00-09:00 & 17:00-19:00)'
+        else:
+            return 'Bukan Jam Sibuk'
+
+    df_2015_vis['kategori_waktu'] = df_2015_vis['hour'].apply(kategori_jam)
+    rata_rata_pm25_2015 = df_2015_vis.groupby('kategori_waktu')['PM2.5'].mean().reset_index()
+
+    fig3, ax3 = plt.subplots(figsize=(8, 4))
+    sns.barplot(data=rata_rata_pm25_2015, x='kategori_waktu', y='PM2.5', palette='Set2', ax=ax3)
+    ax3.set_xlabel("Kategori Waktu", fontsize=11)
+    ax3.set_ylabel("Rata-rata PM2.5 (µg/m³)", fontsize=11)
+    ax3.grid(axis='y', linestyle='--', alpha=0.6)
+    st.pyplot(fig3)
+else:
+    st.warning("Tahun 2015 belum dicentang pada filter sidebar di atas. Pastikan tahun 2015 dipilih agar grafik jam sibuk muncul.")
