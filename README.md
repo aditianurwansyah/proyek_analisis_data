@@ -5,6 +5,10 @@
   <br>
   **pip freeze requirements.txt** 
 
+ ## Install library 
+   **pip install --upgrade pip**
+   **pip install -r requirements.txt** 
+ 
  ## Run streamlit app
    **cd dashboard**
    <br>
