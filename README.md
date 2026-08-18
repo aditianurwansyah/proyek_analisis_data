@@ -10,7 +10,7 @@
  - cd submission_aditia.nurwansyah
  - pip freeze requirements.txt
  - pip install -r requirements.txt
- - cd dashboard
 
  ## Run streamlit app
+ - cd dashboard
  - streamlit run dashboard.py
