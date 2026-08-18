@@ -24,7 +24,7 @@ df = load_data()
 # ==========================================
 st.sidebar.header("🔍 Kontrol & Filter Data")
 
-# 1. Fitur Interaktif Pertama: Multiselect Tahun
+# Fitur Interaktif Pertama: Multiselect Tahun
 tahun_tersedia = sorted(df['year'].unique())
 tahun_pilihan = st.sidebar.multiselect(
     "Pilih Tahun yang Ingin Ditampilkan:",
@@ -32,7 +32,7 @@ tahun_pilihan = st.sidebar.multiselect(
     default=tahun_tersedia
 )
 
-# 2. Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
+# Fitur Interaktif Kedua: Slider Rentang Bulan (Manipulasi Data Langsung)
 rentang_bulan = st.sidebar.slider(
     "Pilih Rentang Bulan:",
     min_value=1,
@@ -66,7 +66,7 @@ with col3:
 st.divider()
 
 # --- VISUALISASI 1: Tren Bulanan (Pertanyaan 1) ---
-st.subheader("1. Tren Rata-rata Tingkat Konsentrasi PM2.5 Bulanan")
+st.subheader("1. Bagaimana tren rata-rata tingkat konsentrasi PM2.5 bulanan di stasiun Aotizhongxin sepanjang tahun 2014 hingga 2016, dan pada bulan apa polusi mencapai titik tertinggi?")
 st.markdown("Grafik ini menunjukkan fluktuasi rata-rata polusi PM2.5 setiap bulannya sesuai rentang bulan yang dipilih.")
 
 monthly_df = filtered_df.groupby('month')['PM2.5'].mean().reset_index()
@@ -79,8 +79,17 @@ ax1.set_xticks(range(1, 13))
 ax1.grid(True, linestyle='--', alpha=0.6)
 st.pyplot(fig1)
 
-st.divider()
+max_row = monthly_df.loc[monthly_df['PM2.5'].idxmax()]
+    kamus_nama_bulan = {
+        1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April', 5: 'Mei', 6: 'Juni',
+        7: 'Juli', 8: 'Agustus', 9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+    }
+    nama_bulan_max = kamus_nama_bulan.get(int(max_row['month']), str(int(max_row['month'])))
+    st.info(f"**Insight:** Berdasarkan data yang aktif, tingkat polusi PM2.5 tertinggi mencapai titik puncaknya pada bulan **{nama_bulan_max}** dengan rata-rata konsentrasi sebesar **{max_row['PM2.5']:.1f} µg/m³**.")
+else:
+    st.warning("Tidak ada data yang tersedia untuk rentang bulan/tahun yang dipilih.")
 
+st.divider()
 # --- VISUALISASI 2: Heatmap Korelasi WSPM, RAIN, dan PM10 (Pertanyaan 2) ---
 st.subheader("2. Korelasi Kecepatan Angin (WSPM) dan Curah Hujan (RAIN) terhadap PM10 (Musim Dingin)")
 st.markdown("Visualisasi matriks korelasi menggunakan *heatmap* untuk melihat hubungan antarvariabel cuaca dan polutan.")
@@ -128,5 +137,9 @@ if not df_2015_vis.empty:
     ax3.set_ylabel("Rata-rata PM2.5 (µg/m³)", fontsize=11)
     ax3.grid(axis='y', linestyle='--', alpha=0.6)
     st.pyplot(fig3)
+
+    val_sibuk = df_2015_vis[df_2015_vis['kategori_waktu'].str.contains('Jam Sibuk')]['PM2.5'].mean()
+    val_nonsibuk = df_2015_vis[df_2015_vis['kategori_waktu'] == 'Bukan Jam Sibuk']['PM2.5'].mean()
+    st.info(f"**Insight:** Pada tahun 2015, rata-rata konsentrasi PM2.5 saat **Jam Sibuk** tercatat sebesar **{val_sibuk:.1f} µg/m³**, sedangkan pada waktu **Non-Sibuk** adalah **{val_nonsibuk:.1f} µg/m³**.")
 else:
     st.warning("Data untuk tahun 2015 tidak masuk dalam filter tahun atau rentang bulan yang sedang dipilih.")
